@@ -981,7 +981,7 @@ createButtonRow(dailyCard, "立即领取第1到7天", "批量领取所有7天每
 end)
 
 createButtonRow(dailyCard, "兑换所有代码", "兑换所有已知的有效促销代码", "兑换", function()
-    local codes = {"33MVisits", "32MVisits", "31MVisits", "30MVisits", "Taiji", "49KLikes", "48KLikes", "47KLikes", "46KLikes", "13KActives", "HWF", "RELEASE"}
+    local codes = {"34MVisits", "35MVisits", "36MVisits", "50KLikes", "60KLikes", "17KActives", "HWF", "Balanced", "AXO"}
     if Events and Events:FindFirstChild("RedeemCode") then
         for _, c in ipairs(codes) do
             Events.RedeemCode:FireServer(c)
