@@ -1626,8 +1626,8 @@ table.insert(activeConnections, RunService.Heartbeat:Connect(function(dt)
     if Events and Events:FindFirstChild("ClaimQuest") then
         Events.ClaimQuest:FireServer("Ticket", Config.TicketDifficulty)
         lastQuestTime = now 
-    end
-end
+     end
+ end
 
         if Config.AutoClaimDaily and (now - lastCastTime >= 2.0) then
             if Events and Events:FindFirstChild("DailyReward") then
