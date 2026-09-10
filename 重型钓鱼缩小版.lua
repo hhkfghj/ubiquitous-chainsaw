@@ -939,21 +939,61 @@ createButtonRow(hopCard, "立即跳服务器", "立即跳转到随机不同服�
 createCategoryHeader(tabQuests, "票据任务")
 local questCard = createCardGroup(tabQuests)
 
-createToggleRow(questCard, "自动票据任务", "自动接受并提交票据任务", Config.AutoTicketQuest, function(v) Config.AutoTicketQuest = v end)
-createDropdownRow(questCard, "难度", "票据任务难度", {"简单", "困难"}, Config.TicketDifficulty, function(v) Config.TicketDifficulty = v end)
+local function GetQuestNPC()
+    local npc = Workspace:FindFirstChild("NPC")
+    local fn = npc and npc:FindFirstChild("Function")
+    return fn and fn:FindFirstChild("Ticket Quest Giver")
+end
 
-createButtonRow(questCard, "手动提交(简单)", "立即提交简单任务", "提交简单", function()
-    if Events and Events:FindFirstChild("ClaimQuest") then
-        Events.ClaimQuest:FireServer("Ticket", "Easy")
-        ShowNotification("任务", "已提交简单票据任务！", "SUCCESS")
+local TicketOptionMap = {
+    Easy = { index = 3, id = "AcceptQuest",     extra = {"Ticket Quest"} },
+    Hard = { index = 2, id = "HardAcceptQuest", extra = {"Ticket Quest"} },
+}
+
+local function SubmitTicketViaDialogue(diffKey)
+    local opt = TicketOptionMap[diffKey]
+    local npcFunc = GetQuestNPC()
+    local ev = Events and Events:FindFirstChild("ChooseDialogueOption")
+    if not (opt and npcFunc and ev) then return false end
+
+    ev:FireServer("Ticket Quest Giver", 1, "Quest", { npcFunc })
+    task.wait(0.2)
+
+    local args = { npcFunc }
+    for _, v in ipairs(opt.extra) do table.insert(args, v) end
+    ev:FireServer("Ticket Quest Giver", opt.index, opt.id, args)
+    return true
+end
+
+local function SubmitTicketViaClaim(diffKey)
+    local ev = Events and Events:FindFirstChild("ClaimQuest")
+    if not ev then return false end
+    ev:FireServer("Ticket", diffKey == "Hard" and "Hard" or "Easy")
+    return true
+end
+
+local function SubmitTicket(diffKey)
+    if SubmitTicketViaDialogue(diffKey) then
+        ShowNotification("任务", "已通过对话接取 " .. diffKey .. " 票据任务！", "SUCCESS")
+    elseif SubmitTicketViaClaim(diffKey) then
+        ShowNotification("任务", "已通过备用通道提交 " .. diffKey .. " 票据任务！", "SUCCESS")
+    else
+        ShowNotification("任务", "对话事件与备用事件均不可用。", "ERROR")
     end
+end
+
+createToggleRow(questCard, "自动票据任务", "自动接受并提交票据任务", Config.AutoTicketQuest, function(v) Config.AutoTicketQuest = v end)
+
+createDropdownRow(questCard, "难度", "票据任务难度（自动/手动通用）", {"Easy", "Hard"}, Config.TicketDifficulty, function(v)
+    Config.TicketDifficulty = v
 end)
 
-createButtonRow(questCard, "手动提交(困难)", "立即提交困难任务", "提交困难", function()
-    if Events and Events:FindFirstChild("ClaimQuest") then
-        Events.ClaimQuest:FireServer("Ticket", "Hard")
-        ShowNotification("任务", "已提交困难票据任务！", "SUCCESS")
-    end
+createButtonRow(questCard, "接受票据任务(简单)", "对 NPC 发起简单任务对话", "接受简单", function()
+    SubmitTicket("Easy")
+end)
+
+createButtonRow(questCard, "接受票据任务(困难)", "对 NPC 发起困难任务对话", "接受困难", function()
+    SubmitTicket("Hard")
 end)
 
 createCategoryHeader(tabQuests, "每日任务与奖励")
@@ -1583,11 +1623,11 @@ table.insert(activeConnections, RunService.Heartbeat:Connect(function(dt)
         end
 
         if Config.AutoTicketQuest and (now - lastQuestTime >= 2.0) then
-            if Events and Events:FindFirstChild("ClaimQuest") then
-                Events.ClaimQuest:FireServer("Ticket", Config.TicketDifficulty)
-                lastQuestTime = now
-            end
-        end
+    if Events and Events:FindFirstChild("ClaimQuest") then
+        Events.ClaimQuest:FireServer("Ticket", Config.TicketDifficulty)
+        lastQuestTime = now
+    end
+                    end
 
         if Config.AutoClaimDaily and (now - lastCastTime >= 2.0) then
             if Events and Events:FindFirstChild("DailyReward") then
