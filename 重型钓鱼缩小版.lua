@@ -1021,7 +1021,7 @@ createButtonRow(dailyCard, "立即领取第1到7天", "批量领取所有7天每
 end)
 
 createButtonRow(dailyCard, "兑换所有代码", "兑换所有已知的有效促销代码", "兑换", function()
-    local codes = {"34MVisits", "35MVisits", "36MVisits", "50KLikes", "60KLikes", "HWF", "AXO", "19KActives", "PVP"}
+    local codes = {"41MVisits", "36MVisits", "65KLikes", "37MVisits", "HWF", "AXO", "38MVisits", "39MVisits", "BUGTrait"}
     if Events and Events:FindFirstChild("RedeemCode") then
         for _, c in ipairs(codes) do
             Events.RedeemCode:FireServer(c)
@@ -1109,6 +1109,7 @@ local islands = {
     {name = "[8] 琥珀岛", pos = Vector3.new(1259.4, 9.1, 1401.5)},
     {name = "[9] 战场岛", pos = Vector3.new(1393.5, 11.3, 169.6)},
     {name = "[10] 雾峰岛", pos = Vector3.new(2660.2, 8.8, -86.7)},
+    {name = "[11] 世界垂钓者岛", pos = Vector3.new(-2702.69, 15.56, -132.48)},
 }
 
 for _, isl in ipairs(islands) do
