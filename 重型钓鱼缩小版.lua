@@ -946,7 +946,7 @@ local function GetQuestNPC()
 end
 
 local TicketOptionMap = {
-    Easy = { index = 3, id = "AcceptQuest",     extra = {"Ticket Quest"} },
+    Easy = { index = 1, id = "EasyAcceptQuest", extra = {"Ticket Quest"} },
     Hard = { index = 2, id = "HardAcceptQuest", extra = {"Ticket Quest"} },
 }
 
@@ -988,11 +988,11 @@ createDropdownRow(questCard, "难度", "票据任务难度（自动/手动通用
     Config.TicketDifficulty = v
 end)
 
-createButtonRow(questCard, "接受票据任务(简单)", "对 NPC 发起简单任务对话", "接受简单", function()
+createButtonRow(questCard, "接受并提交票据任务(简单)", "对 NPC 发起简单任务对话", "接受简单", function()
     SubmitTicket("Easy")
 end)
 
-createButtonRow(questCard, "接受票据任务(困难)", "对 NPC 发起困难任务对话", "接受困难", function()
+createButtonRow(questCard, "接受并提交票据任务(困难)", "对 NPC 发起困难任务对话", "接受困难", function()
     SubmitTicket("Hard")
 end)
 
@@ -1021,7 +1021,7 @@ createButtonRow(dailyCard, "立即领取第1到7天", "批量领取所有7天每
 end)
 
 createButtonRow(dailyCard, "兑换所有代码", "兑换所有已知的有效促销代码", "兑换", function()
-    local codes = {"34MVisits", "35MVisits", "36MVisits", "50KLikes", "60KLikes", "PVP", "HWF", "19KActives", "AXO"}
+    local codes = {"34MVisits", "35MVisits", "36MVisits", "50KLikes", "60KLikes", "HWF", "AXO", "19KActives", "PVP"}
     if Events and Events:FindFirstChild("RedeemCode") then
         for _, c in ipairs(codes) do
             Events.RedeemCode:FireServer(c)
@@ -1622,12 +1622,13 @@ table.insert(activeConnections, RunService.Heartbeat:Connect(function(dt)
             end
         end
 
-        if Config.AutoTicketQuest and (now - lastQuestTime >= 2.0) then
-    if Events and Events:FindFirstChild("ClaimQuest") then
-        Events.ClaimQuest:FireServer("Ticket", Config.TicketDifficulty)
-        lastQuestTime = now 
-    end
-                    end
+  if Config.AutoTicketQuest and (now - lastQuestTime >= 2.0) then
+    lastQuestTime = now
+    task.spawn(function()
+        local diffKey = (Config.TicketDifficulty == "困难" or Config.TicketDifficulty == "Hard") and "Hard" or "Easy"
+        SubmitTicket(diffKey)
+    end)
+end
 
         if Config.AutoClaimDaily and (now - lastCastTime >= 2.0) then
             if Events and Events:FindFirstChild("DailyReward") then
