@@ -1903,12 +1903,17 @@ local function SimulateRightClick()
     end)
 end
 
-if Config.AntiAFK and (tick() - lastInputTime >= 900) then
-    SimulateRightClick() 
-    task.wait(0.2)
-    SimulateSpaceKey() 
-    lastInputTime = tick() 
-end
+table.insert(activeConnections, task.spawn(function()
+    while isRunning do
+        task.wait(1)
+        if Config.AntiAFK and (tick() - lastInputTime >= 900) then
+            SimulateRightClick()  
+            task.wait(0.2)
+            SimulateSpaceKey()     
+            lastInputTime = tick()
+        end
+    end
+end))
 
 local espFolder = Instance.new("Folder")
 espFolder.Name = "IdenticalESP"
