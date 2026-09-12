@@ -15,6 +15,14 @@ local TeleportService = game:GetService("TeleportService")
 local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
 
+local VirtualUser
+pcall(function() VirtualUser = game:GetService("VirtualUser") end)
+
+local VirtualInputManager
+pcall(function() VirtualInputManager = game:GetService("VirtualInputManager") end)
+
+local lastInputTime = tick()
+
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
@@ -52,6 +60,7 @@ local Config = {
     OctoAutoMinigame = false, -- 章鱼自动小游戏
     AutoFarmBoss = false, -- 自动刷Boss
     AutoFarmSecretBoss = false, -- 自动刷隐藏Boss
+    BossDifficulty = "简单", -- Boss难度(简单/困难)  
     SelectedBoss = "Enzo", -- 选择的Boss
     
     AutoGodSpiritCheck = false, -- 自动检测神灵
@@ -836,6 +845,7 @@ end)
 createCategoryHeader(tabBoss, "Boss自动化")
 local bossFarmCard = createCardGroup(tabBoss)
 createToggleRow(bossFarmCard, "自动刷Boss(Enzo)", "持续召唤并击败Enzo", Config.AutoFarmBoss, function(v) Config.AutoFarmBoss = v end)
+createDropdownRow(bossFarmCard, "Boss难度", "选择要刷的Boss难度（简单/困难）", {"简单", "困难"}, Config.BossDifficulty, function(v) Config.BossDifficulty = v end)
 createToggleRow(bossFarmCard, "自动刷隐藏Boss", "自动制作无名鱼饵，召唤并击杀", Config.AutoFarmSecretBoss, function(v) Config.AutoFarmSecretBoss = v end)
 
 createButtonRow(bossFarmCard, "传送到Enzo", "传送到Enzo竞技场", "传送", function()
@@ -976,9 +986,7 @@ local function SubmitTicket(diffKey)
     if SubmitTicketViaDialogue(diffKey) then
         ShowNotification("任务", "已通过对话接取 " .. diffKey .. " 票据任务！", "SUCCESS")
     elseif SubmitTicketViaClaim(diffKey) then
-        ShowNotification("任务", "已通过备用通道提交 " .. diffKey .. " 票据任务！", "SUCCESS")
-    else
-        ShowNotification("任务", "对话事件与备用事件均不可用。", "ERROR")
+        ShowNotification("任务", "对话事件均不可用。", "ERROR")
     end
 end
 
@@ -1021,7 +1029,7 @@ createButtonRow(dailyCard, "立即领取第1到7天", "批量领取所有7天每
 end)
 
 createButtonRow(dailyCard, "兑换所有代码", "兑换所有已知的有效促销代码", "兑换", function()
-    local codes = {"41MVisits", "36MVisits", "65KLikes", "37MVisits", "HWF", "AXO", "38MVisits", "39MVisits", "BUGTrait"}
+    local codes = {"41MVisits", "36MVisits", "65KLikes", "37MVisits", "HWF", "AXO", "38MVisits", "39MVisits", "BUGTrait", "SeeYouSoon"}
     if Events and Events:FindFirstChild("RedeemCode") then
         for _, c in ipairs(codes) do
             Events.RedeemCode:FireServer(c)
@@ -1381,6 +1389,7 @@ local lastGodPrayTime = 0
 local lastEquipTime = 0
 local lastProgressionTime = 0
 local lastProtectTime = 0
+local lastBossFarmTime = 0 
 
 local craftMaterialFish = {
     ["Mountain Fish"] = true,
@@ -1397,6 +1406,30 @@ local craftMaterialFish = {
     ["Rainbow Dragonfish"] = true,
     ["Sanguine Fish"] = true,
 }
+
+local BossDifficultyMap = {
+    ["简单"] = "Normal",
+    ["困难"] = "Hard",
+}
+
+local function IsHoldingRodOrFishing()
+    local char = LocalPlayer.Character
+    if not char then return false end
+
+    if char:GetAttribute("Fishing") == true then return true end
+    if char:GetAttribute("Minigame") == true then return true end
+
+    local pg = LocalPlayer:FindFirstChild("PlayerGui")
+    if pg then
+        local mf = pg:FindFirstChild("MainGui")
+        if mf then
+            local fui = mf:FindFirstChild("Fishing")
+            if fui and fui.Visible then return true end
+        end
+    end
+
+    return false
+end
 
 local waterPlatform = Instance.new("Part")
 waterPlatform.Name = "IdenticalWaterPlatform"
@@ -1657,10 +1690,62 @@ end
             end
         end
 
-        if Config.OctoAutoMinigame then
+            if Config.OctoAutoMinigame then
             if Events and Events:FindFirstChild("RhythmHit") then
                 Events.RhythmHit:FireServer(true, 100)
             end
+        end
+
+        if Config.AutoFarmBoss and not IsHoldingRodOrFishing() and (now - lastBossFarmTime >= 2) then
+            lastBossFarmTime = now
+            task.spawn(function()
+pcall(function()
+    local char = LocalPlayer.Character
+    local pData = ReplicatedStorage:FindFirstChild("Data") and ReplicatedStorage.Data:FindFirstChild(LocalPlayer.UserId)
+    local alreadyHasRod = false
+
+    if char then
+        local tool = char:FindFirstChildOfClass("Tool")
+        if tool then
+            local n = tool.Name:lower()
+            if n:find("rod") or n:find("fishing") then
+                alreadyHasRod = true
+            end
+        end
+        for _, d in ipairs(char:GetChildren()) do
+            if d:IsA("BasePart") or d:IsA("Model") then
+                local n = d.Name:lower()
+                if n:find("rod") or n:find("fishing") then
+                    alreadyHasRod = true
+                    break
+                end
+            end
+        end
+    end
+
+    if not alreadyHasRod and pData then
+        local fr = pData:FindFirstChild("FishingRod")
+        if fr and fr.Value and fr.Value ~= "" then
+            alreadyHasRod = true
+        end
+    end
+
+    if not alreadyHasRod then
+        if Events and Events:FindFirstChild("ToggleHotbar") then
+            Events.ToggleHotbar:InvokeServer("1", nil)
+        end
+    end
+end)
+
+                task.wait(0.5) 
+
+                pcall(function()
+                    if Events and Events:FindFirstChild("StartBossFight") then
+                        local diff = BossDifficultyMap[Config.BossDifficulty] or "Normal"
+                        Events.StartBossFight:FireServer(Config.SelectedBoss or "Enzo", diff)
+                    end
+                end)
+            end)
         end
     end)
 end))
@@ -1767,17 +1852,63 @@ table.insert(activeConnections, UserInputService.JumpRequest:Connect(function()
     end
 end))
 
-pcall(function()
-    LocalPlayer.Idled:Connect(function()
-        if Config.AntiAFK and isRunning then
-            local vu = game:GetService("VirtualUser")
-            if vu then
-                vu:CaptureController()
-                vu:ClickButton2(Vector2.new(0, 0))
-            end
-        end
+table.insert(activeConnections, UserInputService.InputBegan:Connect(function(_, gpe)
+    if not gpe then lastInputTime = tick() end
+end))
+table.insert(activeConnections, UserInputService.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement
+    or input.UserInputType == Enum.UserInputType.Touch
+    or input.UserInputType == Enum.UserInputType.Gamepad1 then
+        lastInputTime = tick()
+    end
+end))
+
+local function SimulateSpaceKey()
+   
+    if keypress and keyrelease then
+        pcall(function()
+            keypress(Enum.KeyCode.Space)
+            task.wait(0.05)
+            keyrelease(Enum.KeyCode.Space)
+        end)
+        return
+    end
+ 
+    if VirtualInputManager then
+        pcall(function()
+            VirtualInputManager:SendKeyEvent(true,  Enum.KeyCode.Space, false, game)
+            task.wait(0.05)
+            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+        end)
+        return
+    end
+      
+        pcall(function()
+        local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
     end)
-end)
+end
+
+local function SimulateRightClick()
+    if VirtualUser then
+        pcall(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new(0, 0))
+        end)
+        return
+    end
+    pcall(function()
+        local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+    end)
+end
+
+if Config.AntiAFK and (tick() - lastInputTime >= 900) then
+    SimulateRightClick() 
+    task.wait(0.2)
+    SimulateSpaceKey() 
+    lastInputTime = tick() 
+end
 
 local espFolder = Instance.new("Folder")
 espFolder.Name = "IdenticalESP"
