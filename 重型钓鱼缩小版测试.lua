@@ -18,6 +18,9 @@ local CoreGui = game:GetService("CoreGui")
 local VirtualUser
 pcall(function() VirtualUser = game:GetService("VirtualUser") end)
 
+local VirtualInputManager
+pcall(function() VirtualInputManager = game:GetService("VirtualInputManager") end)
+
 local lastInputTime = tick()
 
 local LocalPlayer = Players.LocalPlayer
@@ -1783,33 +1786,56 @@ table.insert(activeConnections, UserInputService.InputChanged:Connect(function(i
     end
 end))
 
+local function SimulateSpaceKey()
+   
+    if keypress and keyrelease then
+        pcall(function()
+            keypress(Enum.KeyCode.Space)
+            task.wait(0.05)
+            keyrelease(Enum.KeyCode.Space)
+        end)
+        return
+    end
+ 
+    if VirtualInputManager then
+        pcall(function()
+            VirtualInputManager:SendKeyEvent(true,  Enum.KeyCode.Space, false, game)
+            task.wait(0.05)
+            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+        end)
+        return
+    end
+      
+        pcall(function()
+        local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+    end)
+end
+
+local function SimulateRightClick()
+    if VirtualUser then
+        pcall(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new(0, 0))
+        end)
+        return
+    end
+    pcall(function()
+        local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+    end)
+end
+
 table.insert(activeConnections, task.spawn(function()
     while isRunning do
         task.wait(1)
-        if Config.AntiAFK and (tick() - lastInputTime >= 15) then
-            pcall(function()
-                if VirtualUser then
-                    VirtualUser:CaptureController()
-                    VirtualUser:ClickButton2(Vector2.new(0, 0)) 
-                else
-                    
-                    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-                    if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
-                end
-            end)
-            lastInputTime = tick()  
+        if Config.AntiAFK and (tick() - lastInputTime >= 900) then
+            SimulateRightClick()  
+            task.wait(0.2)
+            SimulateSpaceKey()     
+            lastInputTime = tick()
         end
     end
-end))
-
-table.insert(activeConnections, LocalPlayer.Idled:Connect(function()
-    if not (Config.AntiAFK and isRunning) then return end
-    pcall(function()
-        if VirtualUser then
-            VirtualUser:CaptureController()
-            VirtualUser:ClickButton2(Vector2.new(0, 0))
-        end
-    end)
 end))
 
 local espFolder = Instance.new("Folder")
