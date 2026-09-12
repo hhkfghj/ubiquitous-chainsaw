@@ -314,6 +314,112 @@ local function ShowNotification(title, text, notifType, duration)
     end)
 end
 
+local ChatWatchers = {
+    { pattern = "maoshan has just arrived", title = "茅山来了", msg = "Maoshan has just arrived! (茅山已到达!)", type = "SUCCESS", dur = 6 },
+    { pattern = "maoshan has left",        title = "茅山走了", msg = "Maoshan has left! (茅山已离开!)",      type = "WARN",    dur = 6 },
+    { pattern = "taoist has just arrived", title = "道士来了", msg = "Taoist has just arrived! (道士已到达!)", type = "SUCCESS", dur = 6 },
+    { pattern = "taoist has left",         title = "道士走了", msg = "Taoist has left! (道士已离开!)",      type = "WARN",    dur = 6 },
+}
+
+local function HandleChatMessage(text)
+    if not isRunning then return end
+    if type(text) ~= "string" or #text == 0 then return end
+    local lower = text:lower()
+    for _, w in ipairs(ChatWatchers) do
+        if lower:find(w.pattern, 1, true) then
+            ShowNotification(w.title, w.msg, w.type, w.dur)
+        end
+    end
+end
+
+pcall(function()
+    local TextChatService = game:GetService("TextChatService")
+    if TextChatService then
+        table.insert(activeConnections, TextChatService.MessageReceived:Connect(function(message)
+            pcall(function()
+                if message and message.Text then
+                    HandleChatMessage(message.Text)
+                end
+            end)
+        end))
+    end
+end)
+
+pcall(function()
+    local DefaultChat = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+    if DefaultChat then
+        local OnMessageDone = DefaultChat:FindFirstChild("OnMessageDoneFiltering")
+        if OnMessageDone then
+            table.insert(activeConnections, OnMessageDone.OnClientEvent:Connect(function(data)
+                pcall(function()
+                    if type(data) == "table" and data.Message then
+                        HandleChatMessage(tostring(data.Message))
+                    end
+                end)
+            end))
+        end
+    end
+end)
+
+local seenChatLines = {}
+table.insert(activeConnections, task.spawn(function()
+    while isRunning do
+        task.wait(0.6)
+        if not isRunning then break end
+        pcall(function()
+            local pg = LocalPlayer:FindFirstChild("PlayerGui")
+            if not pg then return end
+
+            local chatWindow = pg:FindFirstChild("Chat")
+            if chatWindow then
+                for _, d in ipairs(chatWindow:GetDescendants()) do
+                    if d:IsA("TextLabel") or d:IsA("TextButton") then
+                        local t = d.Text
+                        if type(t) == "string" and #t > 0 and not seenChatLines[t] then
+                            local lower = t:lower()
+                            for _, w in ipairs(ChatWatchers) do
+                                if lower:find(w.pattern, 1, true) then
+                                    seenChatLines[t] = true
+                                    HandleChatMessage(t)
+                                    break
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+
+            local legacy = pg:FindFirstChild("Chat") or pg:FindFirstChild("LegacyChat")
+            if legacy and legacy ~= chatWindow then
+                local container = legacy:FindFirstChild("ChatChannelParentFrame") 
+                    or legacy:FindFirstChild("ChatChannelParentFrameFake") 
+                    or legacy
+                if container then
+                    for _, d in ipairs(container:GetDescendants()) do
+                        if d:IsA("TextLabel") then
+                            local t = d.Text
+                            if type(t) == "string" and #t > 0 and not seenChatLines[t] then
+                                local lower = t:lower()
+                                for _, w in ipairs(ChatWatchers) do
+                                    if lower:find(w.pattern, 1, true) then
+                                        seenChatLines[t] = true
+                                        HandleChatMessage(t)
+                                        break
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+
+            local count = 0
+            for _ in pairs(seenChatLines) do count = count + 1 end
+            if count > 500 then table.clear(seenChatLines) end
+        end)
+    end
+end))
+
 local ToggleUiVisibility
 
 local floatingCrescent = Instance.new("ImageButton")
@@ -1198,6 +1304,180 @@ for _, sr in ipairs(secretRods) do
         end
     end)
 end
+
+createCategoryHeader(tabTeleports, "NPC传送")
+local npcTeleportCard = createCardGroup(tabTeleports)
+
+local npcTracked = { Taoist = nil, Maoshan = nil }
+local npcArrivedFlag = { Taoist = false, Maoshan = false }
+
+local function FindNPCDeep(substr)
+    local function scan(container, depth)
+        if depth > 4 then return nil end
+        for _, n in ipairs(container:GetChildren()) do
+            local ok, name = pcall(function() return n.Name end)
+            if ok and type(name) == "string" and name:find(substr) then
+                if n:IsA("Model") then
+                    local ok2, pivot = pcall(function() return n:GetPivot() end)
+                    if ok2 and pivot then return pivot.Position end
+                elseif n:IsA("BasePart") then
+                    return n.Position
+                end
+            end
+            if n:IsA("Model") or n:IsA("Folder") then
+                local r = scan(n, depth + 1)
+                if r then return r end
+            end
+        end
+        return nil
+    end
+
+    local roots = {
+        Workspace:FindFirstChild("NPC"),
+        Workspace:FindFirstChild("NPCs"),
+        Workspace:FindFirstChild("Npcs"),
+        Workspace:FindFirstChild("Interactables"),
+        Workspace:FindFirstChild("Characters"),
+        Workspace,
+    }
+    for _, r in ipairs(roots) do
+        if r then
+            local pos = scan(r, 1)
+            if pos then return pos end
+        end
+    end
+    return nil
+end
+
+local function TeleportToNPC(kind)
+    local pos = npcTracked[kind]
+    if not pos then
+        ShowNotification("传送", (kind == "Taoist" and "道士" or "茅山") .. " 坐标未刷新。", "WARN")
+        return
+    end
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if root then
+        root.CFrame = CFrame.new(pos + Vector3.new(0, 3, 0))
+        ShowNotification("传送", "已传送到 " .. (kind == "Taoist" and "道士" or "茅山") .. "！", "SUCCESS")
+    end
+end
+
+local btnTPTaoist = createButtonRow(npcTeleportCard, "传送道士", "未刷新", "传送", function()
+    TeleportToNPC("Taoist")
+end)
+
+local btnTPMaoshan = createButtonRow(npcTeleportCard, "传送茅山", "未刷新", "传送", function()
+    TeleportToNPC("Maoshan")
+end)
+
+local function GetDescLabelFromButton(btn)
+    local row = btn and btn.Parent
+    if not row then return nil end
+    for _, child in ipairs(row:GetChildren()) do
+        if child:IsA("Frame") then
+            for _, c2 in ipairs(child:GetChildren()) do
+                if c2:IsA("TextLabel") and c2.TextSize == 8 then
+                    return c2
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local taoistDescLabel  = GetDescLabelFromButton(btnTPTaoist)
+local maoshanDescLabel = GetDescLabelFromButton(btnTPMaoshan)
+
+local function RefreshNPCCoords()
+    local tPos = FindNPCDeep("Taoist")
+    local mPos = FindNPCDeep("Maoshan")
+
+    npcTracked.Taoist  = tPos
+    npcTracked.Maoshan = mPos
+
+    if taoistDescLabel then
+        if tPos then
+            taoistDescLabel.Text = string.format("坐标: (%.1f, %.1f, %.1f)", tPos.X, tPos.Y, tPos.Z)
+            taoistDescLabel.TextColor3 = Colors.AccentGreen
+        elseif npcArrivedFlag.Taoist then
+            taoistDescLabel.Text = "已到达(坐标解析中...)"
+            taoistDescLabel.TextColor3 = Colors.AccentYellow
+        else
+            taoistDescLabel.Text = "未刷新"
+            taoistDescLabel.TextColor3 = Colors.TextMuted
+        end
+    end
+    if maoshanDescLabel then
+        if mPos then
+            maoshanDescLabel.Text = string.format("坐标: (%.1f, %.1f, %.1f)", mPos.X, mPos.Y, mPos.Z)
+            maoshanDescLabel.TextColor3 = Colors.AccentGreen
+        elseif npcArrivedFlag.Maoshan then
+            maoshanDescLabel.Text = "已到达(坐标解析中...)"
+            maoshanDescLabel.TextColor3 = Colors.AccentYellow
+        else
+            maoshanDescLabel.Text = "未刷新"
+            maoshanDescLabel.TextColor3 = Colors.TextMuted
+        end
+    end
+end
+
+local function OnVisitStateChange(kind, arrived)
+    npcArrivedFlag[kind] = arrived
+    if arrived then
+        RefreshNPCCoords()
+    else
+        npcTracked[kind] = nil
+        RefreshNPCCoords()
+    end
+end
+
+pcall(function()
+    local TCS = game:GetService("TextChatService")
+    if TCS then
+        table.insert(activeConnections, TCS.MessageReceived:Connect(function(tcm)
+            if not (tcm and tcm.Text) then return end
+            local t = tcm.Text
+            if t:find("Taoist has just arrived!", 1, true) then OnVisitStateChange("Taoist", true) end
+            if t:find("Taoist has left!", 1, true) then OnVisitStateChange("Taoist", false) end
+            if t:find("Maoshan has just arrived!", 1, true) then OnVisitStateChange("Maoshan", true) end
+            if t:find("Maoshan has left!", 1, true) then OnVisitStateChange("Maoshan", false) end
+        end))
+    end
+end)
+
+for _, plr in ipairs(Players:GetPlayers()) do
+    table.insert(activeConnections, plr.Chatted:Connect(function(msg)
+        if msg:find("Taoist has just arrived!", 1, true) then OnVisitStateChange("Taoist", true) end
+        if msg:find("Taoist has left!", 1, true) then OnVisitStateChange("Taoist", false) end
+        if msg:find("Maoshan has just arrived!", 1, true) then OnVisitStateChange("Maoshan", true) end
+        if msg:find("Maoshan has left!", 1, true) then OnVisitStateChange("Maoshan", false) end
+    end))
+end
+table.insert(activeConnections, Players.PlayerAdded:Connect(function(plr)
+    plr.Chatted:Connect(function(msg)
+        if msg:find("Taoist has just arrived!", 1, true) then OnVisitStateChange("Taoist", true) end
+        if msg:find("Taoist has left!", 1, true) then OnVisitStateChange("Taoist", false) end
+        if msg:find("Maoshan has just arrived!", 1, true) then OnVisitStateChange("Maoshan", true) end
+        if msg:find("Maoshan has left!", 1, true) then OnVisitStateChange("Maoshan", false) end
+    end)
+end))
+
+-- 每 5 秒轮询刷新一次
+local lastNpcScan = 0
+table.insert(activeConnections, RunService.Heartbeat:Connect(function()
+    if not isRunning then return end
+    local now = tick()
+    if now - lastNpcScan < 5 then return end
+    lastNpcScan = now
+    RefreshNPCCoords()
+end))
+
+-- 打开脚本 1 秒后先刷一次
+task.spawn(function()
+    task.wait(1)
+    RefreshNPCCoords()
+end)
 
 createCategoryHeader(tabTeleports, "服务器与玩家传送")
 local srvCard = createCardGroup(tabTeleports)
