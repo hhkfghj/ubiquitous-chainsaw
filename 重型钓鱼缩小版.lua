@@ -1463,7 +1463,6 @@ table.insert(activeConnections, Players.PlayerAdded:Connect(function(plr)
     end)
 end))
 
--- 每 5 秒轮询刷新一次
 local lastNpcScan = 0
 table.insert(activeConnections, RunService.Heartbeat:Connect(function()
     if not isRunning then return end
@@ -1473,7 +1472,6 @@ table.insert(activeConnections, RunService.Heartbeat:Connect(function()
     RefreshNPCCoords()
 end))
 
--- 打开脚本 1 秒后先刷一次
 task.spawn(function()
     task.wait(1)
     RefreshNPCCoords()
