@@ -1660,6 +1660,9 @@ createButtonRow(credCard, "卸载脚本", "干净地卸载脚本并恢复光照"
 local lastCastTime = 0
 local lastSellTime = 0
 local lastSkillTime = 0
+local skillKeys = {"Z", "X", "C", "V"}  
+local skillIdx = 1                      
+local SkillInterval = 0.15                
 local lastGachaTime = 0
 local lastBaitBuyTime = 0
 local lastQuestTime = 0
@@ -1783,13 +1786,19 @@ table.insert(activeConnections, RunService.Heartbeat:Connect(function(dt)
                     lastProgressionTime = now
                 end
 
-                if Config.AutoSkills and (now - lastSkillTime >= 0.15) then
-                    for _, sk in ipairs({"Z", "X", "C", "V"}) do
-                        if Events:FindFirstChild("UseSkill") then Events.UseSkill:FireServer(sk) end
-                        if Events:FindFirstChild("TriggerMinigameSkill") then Events.TriggerMinigameSkill:FireServer(sk) end
-                    end
-                    lastSkillTime = now
-                end
+                if Config.AutoSkills and (now - lastSkillTime >= SkillInterval) then
+    local sk = skillKeys[skillIdx]
+    skillIdx = skillIdx % #skillKeys + 1 
+
+    if Events:FindFirstChild("UseSkill") then
+        pcall(function() Events.UseSkill:FireServer(sk) end)
+    end
+    if Events:FindFirstChild("TriggerMinigameSkill") then
+        pcall(function() Events.TriggerMinigameSkill:FireServer(sk) end)
+    end
+
+    lastSkillTime = now
+end
             end
         elseif isFishing then
             lastCastTime = now
