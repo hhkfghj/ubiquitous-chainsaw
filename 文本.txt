@@ -1,0 +1,884 @@
+local _0x1 = game:GetService("PathfindingService")
+local _0x2 = game:GetService("Players")
+local _0x3 = workspace.CurrentCamera
+local _0x4 = true
+local _0x5 = {}
+local _0x6 = {}
+local _0x7 = nil
+local _0x8 = nil
+local function _0x9(_0xa)
+	if typeof(_0xa)=="function"and setstackhidden then
+		pcall(setstackhidden,_0xa,true)
+	end
+end
+
+local _0xb=[[
+task.spawn(function()
+	repeat task.wait(0.5)until game:IsLoaded()
+	local _0xc=game:GetService("Players")
+	local _0xd=_0xc.LocalPlayer or _0xc:GetPropertyChangedSignal("LocalPlayer"):Wait()
+	repeat task.wait(0.5)until _0xd.Character and _0xd.Character:FindFirstChild("HumanoidRootPart")
+	task.wait(1.5)
+	local _0xe,_0xf=pcall(function()
+		if loadfile then
+			local _0x10=loadfile("rivals.luau")or loadfile("Rivals.luau")
+			if _0x10 then _0x10()end
+		end
+	end)
+end)
+]]
+
+if queue_on_teleport then
+	pcall(function()queue_on_teleport(_0xb)end)
+elseif syn and syn.queue_on_teleport then
+	pcall(function()syn.queue_on_teleport(_0xb)end)
+end
+
+_0x2.LocalPlayer.OnTeleport:Connect(function(_0x11)
+	if _0x11==Enum.TeleportState.Started or _0x11==Enum.TeleportState.InProgress then
+		if queue_on_teleport then
+			pcall(function()queue_on_teleport(_0xb)end)
+		elseif syn and syn.queue_on_teleport then
+			pcall(function()syn.queue_on_teleport(_0xb)end)
+		end
+	end
+end)
+
+-- 设置项配置表
+local _0x12={
+	Aimbot=false,--自动瞄准关闭
+	TeamCheck=true,--开启队伍检测
+	AimbotKey=Enum.UserInputType.MouseButton2,--自动瞄准按键：鼠标右键
+	AimbotKeyMode="Hold",--按键模式：按住
+	AimbotPart="Closest",--瞄准部位：最近
+	AimbotSmoothing=0.28,--瞄准平滑度
+	AimbotFOV=120,--瞄准视野范围
+	AimbotVisibleOnly=true,--只瞄准可见敌人
+	AimbotScopeOnly=false,--仅开镜生效
+	AimbotDisableReloading=true,--禁用自动换弹
+	ContinuousTargeting=true,--持续锁定目标
+	InstantCameraLock=false,--瞬间锁定相机
+	TrackThroughWalls=true,--穿墙追踪
+	CorrectLockedShots=true,--修正锁定射击
+	SilentAim=true,--静默瞄准开启
+	SilentKey=Enum.KeyCode.C,--静默瞄准按键C
+	SilentKeyMode="Always",--按键模式：始终开启
+	SilentTargetPart="Head",--静默瞄准部位：头部
+	SilentFOV=242,--静默瞄准视野
+	SilentHitChance=78,--命中概率
+	SilentHeadChance=59,--爆头概率
+	SilentVisibleOnly=true,--静默只打可见目标
+	SilentVulnerableOnly=true,--只打弱点
+	SilentIgnoreDeflecting=true,--忽略格挡目标
+	SilentIgnoreShielded=true,--忽略护盾目标
+	Ragebot=false,--狂暴机器人关闭
+	RagebotAutoShoot=false,--狂暴自动射击
+	RagebotTargetStrafe=false,--狂暴目标横移
+	TargetStrafeRadius=14,--目标横移半径
+	TargetStrafeSpeed=6,--目标横移速度
+	Autoplay=false,--自动游玩关闭
+	AutoplayDistance=18,--自动游玩距离
+	RagebotTargetPriority="Distance",--狂暴目标优先级：距离
+	RagebotWallbang=true,--穿墙射击
+	AutoRespawn=false,--自动复活关闭
+	AutoQueue=false,--自动匹配关闭
+	QueueMode="1v1",--匹配模式：1v1
+	AutoVoteMaps=false,--自动投票地图关闭
+	MapPriority="竞技场, 玛瑙, 十字路口",--地图优先级
+	AutoBanWeapons=false,--自动禁用武器关闭
+	WeaponBanPriority="榴弹发射器, 迷你机枪, RPG",--武器禁用优先级
+	SecondBanPriority="榴弹发射器, 迷你机枪, RPG",--二次禁用优先级
+	AutoLoadout=true,--自动装备配置开启
+	LoadoutOnlySelected=false,--仅加载选中配置
+	EnabledMaps="竞技场, 十字路口",--启用地图
+	AntiAim=false,--反瞄准关闭
+	AntiAimMode="抖动",--反瞄准模式：抖动
+	AntiAimSpeed=10,--反瞄准速度
+	HackerDetector=true,--作弊者检测开启
+	NotifyHackers=true,--通知作弊者
+	HackerAutoLoad=true,--作弊者自动加载配置
+	HackerProfile="狂暴",--作弊者配置文件
+	SpeedThreshold=180,--速度阈值
+	SpeedDuration=0.75,--速度持续时间
+	ModDetector=true,--模组检测开启
+	NotifyMods=true,--通知模组使用者
+	MinGroupRank=200,--最小群组等级
+	ModUsernames="名字1, 名字2",--模组使用者用户名
+	ModFriendList="名字1, 名字2",--模组好友列表
+	AutoPickup=false,--自动拾取关闭
+	PickupRadius=25,--拾取半径
+	ESP_Master=true,--总ESP开启
+	ESP_EnemyOnly=true,--仅敌人ESP
+	ESP_Lobby=true,--大厅ESP
+	ESP_MaxDistance=500,--ESP最大距离
+	ESP_Boxes=true,--方框显示
+	ESP_Names=true,--名字显示
+	ESP_Distance=true,--距离显示
+	ESP_HealthBar=true,--血条显示
+	ESP_Weapon=true,--武器显示
+	ESP_Tracers=false,--轨迹线关闭
+	ESP_Chams=false,--材质高亮关闭
+	ESP_Skeleton=true,--骨骼显示
+	ESP_HeadDot=true,--头部圆点
+	ESP_Tripmines=true,--地雷显示
+	ESP_FOV=true,--视野圈显示
+	TargetVisualizer=true,--目标可视化开启
+	TargetVisualizerHUD=true,--目标HUD可视化
+	TargetVisualizerPath=true,--目标路径可视化
+	VisualizerArrowSpacing=10,--可视化箭头间距
+	VisualizerArrowSpeed=14,--可视化箭头速度
+	SpeedHack=false,--速度修改关闭
+	SpeedValue=49,--速度数值
+	FlyHack=false,--飞行关闭
+	FlySpeed=50,--飞行速度
+	InfiniteJump=false,--无限跳跃关闭
+	BunnyHop=false,--连跳关闭
+	Noclip=false,--穿墙关闭
+	NoRecoil=true,--无后坐力开启
+	NoSpread=true,--无扩散开启
+	FastReload=false,--快速换弹关闭
+	RapidFire=false,--快速开火关闭
+	InstantEquip=false,--瞬间装备关闭
+	AutomaticGuns=false,--自动枪械关闭
+	InfiniteAmmo=false,--无限弹药关闭
+	UnlockAllSkins=false,--解锁全部皮肤关闭
+	SelectedCategory="主武器",--选中分类
+	SelectedWeapon="突击步枪",--选中武器
+	SelectedWrap="液态黄金",--选中皮肤
+	SelectedCharm="骰子",--选中挂件
+	SelectedFinisher="姜饼化",--选中终结技
+	RainbowGunSkin=false,--彩虹枪械皮肤关闭
+	WeaponChams=false,--武器材质高亮关闭
+	CustomViewModelFOV=false,--自定义第一人称视野关闭
+	ViewModelFOVValue=70,--第一人称视野数值
+	ViewModelXOffset=0,--第一人称X偏移
+	ViewModelYOffset=0,--第一人称Y偏移
+	ViewModelZOffset=0,--第一人称Z偏移
+	HideViewModel=false,--隐藏第一人称模型关闭
+	Fullbright=false,--全亮关闭
+	NoFog=true,--去除迷雾开启
+	CustomFOV=false,--自定义视野关闭
+	FOVValue=90,--视野数值
+	BulletTracers=false,--子弹轨迹关闭
+	HitSound="击杀",--命中音效
+	ThirdPerson=false,--第三人称关闭
+	ThirdPersonDist=12,--第三人称距离
+	Freecam=false,--自由相机关闭
+	FreecamSpeed=40,--自由相机速度
+	MenuKey=Enum.KeyCode.RightControl,--菜单打开按键：右Ctrl
+	MobileToggle=false--移动端切换
+}
+
+--UI颜色配置
+local _0x13={
+	OuterBorder=Color3.fromRGB(215,106,141),
+	BorderPink=Color3.fromRGB(215,106,141),
+	BorderPinkDark=Color3.fromRGB(150,60,92),
+	WindowBg=Color3.fromRGB(22,17,21),
+	WindowBgTop=Color3.fromRGB(28,20,26),
+	WindowBgBottom=Color3.fromRGB(16,12,15),
+	InnerCanvasBg=Color3.fromRGB(20,15,19),
+	HeaderBg=Color3.fromRGB(24,18,23),
+	CardBg=Color3.fromRGB(33,24,30),
+	CardBgTop=Color3.fromRGB(44,32,41),
+	CardBgBottom=Color3.fromRGB(22,16,20),
+	BorderDark=Color3.fromRGB(56,40,52),
+	BorderCard=Color3.fromRGB(64,46,59),
+	AccentPink=Color3.fromRGB(226,120,152),
+	AccentPinkLight=Color3.fromRGB(245,152,182),
+	AccentPinkDark=Color3.fromRGB(180,72,108),
+	AccentPinkDim=Color3.fromRGB(120,42,70),
+	TextWhite=Color3.fromRGB(242,240,243),
+	TextMuted=Color3.fromRGB(152,132,144),
+	TextDark=Color3.fromRGB(105,88,100),
+	ControlBg=Color3.fromRGB(15,11,14),
+	ButtonBg=Color3.fromRGB(32,23,29),
+	ButtonHoverBg=Color3.fromRGB(48,34,44),
+	ButtonBorder=Color3.fromRGB(68,48,62),
+	Red=Color3.fromRGB(235,75,75),
+	Yellow=Color3.fromRGB(245,195,65),
+	AccentGreen=Color3.fromRGB(226,120,152),
+	AccentGreenLight=Color3.fromRGB(245,152,182),
+	AccentGreenDark=Color3.fromRGB(180,72,108),
+	AccentGreenDim=Color3.fromRGB(120,42,70)
+}
+
+local _0x14=Enum.Font.RobotoMono
+local _0x15=Vector3.new(109,-680,1184)
+
+local function _0x16()
+	local _0x17=_0x2.LocalPlayer.Character
+	local _0x18=_0x17 and _0x17:FindFirstChild("HumanoidRootPart")
+	if not _0x18 then return false end
+	return (_0x18.Position-_0x15).Magnitude<450
+end
+
+local function _0x19(_0x1a)
+	if not _0x1a then return false end
+	if _0x1a==_0x2.LocalPlayer then return true end
+	if _0x12.TeamCheck==false then return false end
+	local _0x1b=nil
+	if typeof(_0x1a)=="Instance"then
+		if _0x1a:IsA("Player")then
+			_0x1b=_0x1a
+		elseif _0x2.LocalPlayer.Character and (_0x1a==_0x2.LocalPlayer.Character or _0x1a:IsDescendantOf(_0x2.LocalPlayer.Character))then
+			return true
+		else
+			_0x1b=_0x2:GetPlayerFromCharacter(_0x1a:IsA("Model")and _0x1a or _0x1a:FindFirstAncestorOfClass("Model"))
+		end
+	end
+	if _0x1b and _0x2.LocalPlayer.Team and _0x1b.Team and _0x2.LocalPlayer.Team==_0x1b.Team then return true end
+	if _0x1b then
+		local _0x1c=_0x2.LocalPlayer:GetAttribute("TeamID")or _0x2.LocalPlayer:GetAttribute("Team")
+		local _0x1d=_0x1b:GetAttribute("TeamID")or _0x1b:GetAttribute("Team")
+		if _0x1c~=nil and _0x1d~=nil and _0x1c==_0x1d then return true end
+	end
+	local _0x1e=_0x1b and _0x1b.Character or (typeof(_0x1a)=="Instance"and(_0x1a:IsA("Model")and _0x1a or _0x1a:FindFirstAncestorOfClass("Model")))
+	local _0x1f=_0x2.LocalPlayer.Character
+	if _0x1e and _0x1f then
+		local _0x20=_0x1f:GetAttribute("TeamID")or _0x1f:GetAttribute("Team")
+		local _0x21=_0x1e:GetAttribute("TeamID")or _0x1e:GetAttribute("Team")
+		if _0x20~=nil and _0x21~=nil and _0x20==_0x21 then return true end
+		if _0x1e:FindFirstChild("TeammateLabel",true)or _0x1e:FindFirstChild("AllyLabel",true)then return true end
+	end
+	return false
+end
+_0x9(_0x19)
+
+local function _0x22(_0x23)
+	if not _0x23 or _0x23==_0x2.LocalPlayer then return false end
+	if _0x16()then return _0x12.ESP_Lobby==true end
+	if _0x19(_0x23)then return false end
+	if _0x12.ESP_EnemyOnly and _0x2.LocalPlayer.Team and _0x23.Team and _0x2.LocalPlayer.Team==_0x23.Team then return false end
+	return true
+end
+_0x9(_0x22)
+
+local function _0x24()
+	if gethui then
+		local _0x25,_0x26=pcall(gethui)
+		if _0x25 and _0x26 then return _0x26 end
+	end
+	local _0x27,_0x28=pcall(function()return CoreGui end)
+	if _0x27 and _0x28 then return _0x28 end
+	return _0x2.LocalPlayer:WaitForChild("PlayerGui",5)or _0x2.LocalPlayer:FindFirstChild("PlayerGui")
+end
+
+local _0x29=Instance.new("ScreenGui")
+_0x29.Name="ParagonRippedUI"
+_0x29.ResetOnSpawn=false
+_0x29.IgnoreGuiInset=true
+_0x29.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+_0x29.DisplayOrder=999
+_0x29.Parent=_0x24()
+table.insert(_0x6,_0x29)
+
+local function _0x2a()
+	_0x4=false
+	for _,_0x2b in ipairs(_0x5)do
+		pcall(function()_0x2b:Disconnect()end)
+	end
+	table.clear(_0x5)
+	for _,_0x2c in ipairs(_0x6)do
+		pcall(function()_0x2c:Destroy()end)
+	end
+	table.clear(_0x6)
+	if _0x8 then
+		pcall(function()
+			local _0x2d=require(ReplicatedStorage.Modules.Utility)
+			_0x2d.Raycast=_0x8
+		end)
+	end
+	pcall(function()ContextActionService:UnbindAction("ParagonMenuFreeze")end)
+	pcall(function()
+		local _0x2e=_0x2.LocalPlayer:FindFirstChild("PlayerScripts")
+		local _0x2f=_0x2e and _0x2e:FindFirstChild("PlayerModule")
+		if _0x2f then
+			local _0x30=require(_0x2f):GetControls()
+			if _0x30 then _0x30:Enable()end
+		end
+	end)
+	pcall(function()
+		UserInputService.MouseBehavior=Enum.MouseBehavior.Default
+		if _0x2.LocalPlayer.Character and _0x2.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")then
+			_0x2.LocalPlayer.Character.HumanoidRootPart.Anchored=false
+		end
+	end)
+	if getgenv then getgenv().ParagonRippedUnload=nil end
+end
+
+if getgenv then getgenv().ParagonRippedUnload=_0x2a end
+
+local _0x31={}
+
+local function _0x32()
+	if not _0x4 then return end
+	pcall(function()
+		local _0x33=game:GetService("ReplicatedStorage")
+		local _0x34=_0x33:FindFirstChild("Modules")and _0x33.Modules:FindFirstChild("ItemLibrary")
+		if not _0x34 then return end
+		local _0x35=require(_0x34)
+		if _0x35 and _0x35.Items then
+			for _0x36,_0x37 in pairs(_0x35.Items)do
+				if type(_0x37)=="table"and _0x37.ShootRecoil~=nil then
+					if not _0x31[_0x36]then
+						_0x31[_0x36]={
+							ShootRecoil=_0x37.ShootRecoil,
+							ShootSpread=_0x37.ShootSpread,
+							AimSpreadMultiplier=_0x37.AimSpreadMultiplier,
+							ShootSpreadPerVelocityUnit=_0x37.ShootSpreadPerVelocityUnit,
+							ShootSpreadPerVelocityLimit=_0x37.ShootSpreadPerVelocityLimit,
+							EquipCooldown=_0x37.EquipCooldown,
+							ReloadLength=_0x37.ReloadLength,
+							EmptyReloadLength=_0x37.EmptyReloadLength,
+							ReloadActionTimestamp=_0x37.ReloadActionTimestamp,
+							EmptyReloadActionTimestamp=_0x37.EmptyReloadActionTimestamp,
+							ShootCooldown=_0x37.ShootCooldown,
+							MaxAmmo=_0x37.MaxAmmo,
+							MaxAmmoReserve=_0x37.MaxAmmoReserve
+						}
+					end
+					local _0x38=_0x31[_0x36]
+					_0x37.ShootRecoil=_0x12.NoRecoil and 0 or _0x38.ShootRecoil
+					_0x37.ShootSpread=_0x12.NoSpread and 0 or _0x38.ShootSpread
+					_0x37.AimSpreadMultiplier=_0x12.NoSpread and 0 or _0x38.AimSpreadMultiplier
+					_0x37.ShootSpreadPerVelocityUnit=_0x12.NoSpread and 0 or _0x38.ShootSpreadPerVelocityUnit
+					_0x37.ShootSpreadPerVelocityLimit=_0x12.NoSpread and 0 or _0x38.ShootSpreadPerVelocityLimit
+					_0x37.EquipCooldown=_0x12.InstantEquip and 0.01 or _0x38.EquipCooldown
+					_0x37.ReloadLength=_0x12.FastReload and 0.05 or _0x38.ReloadLength
+					_0x37.EmptyReloadLength=_0x12.FastReload and 0.05 or _0x38.EmptyReloadLength
+					_0x37.ReloadActionTimestamp=_0x12.FastReload and 0.01 or _0x38.ReloadActionTimestamp
+					_0x37.EmptyReloadActionTimestamp=_0x12.FastReload and 0.01 or _0x38.EmptyReloadActionTimestamp
+					_0x37.ShootCooldown=_0x12.RapidFire and(_0x38.ShootCooldown*0.4)or _0x38.ShootCooldown
+					if _0x38.MaxAmmo then
+						_0x37.MaxAmmo=_0x12.InfiniteAmmo and 9999 or _0x38.MaxAmmo
+					end
+					if _0x38.MaxAmmoReserve then
+						_0x37.MaxAmmoReserve=_0x12.InfiniteAmmo and 9999 or _0x38.MaxAmmoReserve
+					end
+				end
+			end
+		end
+	end)
+end
+
+local function _0x39()
+	pcall(function()
+		local _0x3a=game:GetService("ReplicatedStorage")
+		local _0x3b=require(_0x2.LocalPlayer.PlayerScripts.Controllers.PlayerDataController)
+		local _0x3c=require(_0x3a.Modules.CosmeticLibrary)
+		local _0x3d=require(_0x3a.Modules.ItemLibrary)
+		if _0x3b and _0x3b.CurrentData and _0x3b.CurrentData.Data then
+			local _0x3e=_0x3b.CurrentData.Data.CosmeticInventory or {}
+			local _0x3f=_0x3b.CurrentData.Data.WeaponInventory or {}
+			if _0x3c and _0x3c.Cosmetics then
+				for _0x40,_0x41 in pairs(_0x3c.Cosmetics)do
+					_0x3e[_0x40]=true
+				end
+			end
+			local _0x42={}
+			local _0x43={}
+			if typeof(_0x3f)=="table"then
+				for _,_0x44 in pairs(_0x3f)do
+					if typeof(_0x44)=="table"and _0x44.Name then
+						table.insert(_0x42,_0x44)
+						_0x43[_0x44.Name]=true
+					end
+				end
+			end
+			if _0x3d and _0x3d.Items then
+				for _0x45,_0x46 in pairs(_0x3d.Items)do
+					if not _0x43[_0x45]then
+						table.insert(_0x42,{Name=_0x45,Level=100,Prestige=5,XP=99999,IsFavorited=false})
+						_0x43[_0x45]=true
+					end
+				end
+			end
+			_0x3b.CurrentData.Data.CosmeticInventory=_0x3e
+			_0x3b.CurrentData.Data.WeaponInventory=_0x42
+		end
+	end)
+end
+
+local function _0x47(_0x48,_0x49,_0x4a,_0x4b)
+	pcall(function()
+		local _0x4c=game:GetService("ReplicatedStorage")
+		local _0x4d=require(_0x2.LocalPlayer.PlayerScripts.Controllers.PlayerDataController)
+		if _0x4d and _0x4d.CurrentData and _0x4d.CurrentData.Data then
+			local _0x4e=_0x4d.CurrentData.Data.WeaponInventory
+			if typeof(_0x4e)=="table"then
+				for _,_0x4f in ipairs(_0x4e)do
+					if typeof(_0x4f)=="table"and(_0x4f.Name==_0x48 or _0x48=="全部")then
+						if _0x49 and _0x49~="默认"and _0x49~="无"then
+							_0x4f.Wrap={Name=_0x49,Inverted=false}
+						elseif _0x49=="默认"or _0x49=="无"then
+							_0x4f.Wrap=nil
+						end
+						if _0x4a and _0x4a~="无"then
+							_0x4f.Charm={Name=_0x4a}
+						elseif _0x4a=="无"then
+							_0x4f.Charm=nil
+						end
+						if _0x4b and _0x4b~="无"then
+							_0x4f.Finisher={Name=_0x4b}
+						elseif _0x4b=="无"then
+							_0x4f.Finisher=nil
+						end
+					end
+				end
+			end
+			local _0x50=_0x4c:FindFirstChild("Remotes")
+			local _0x51=_0x50 and _0x50:FindFirstChild("Data")
+			local _0x52=_0x51 and _0x51:FindFirstChild("EquipCosmetic")
+			if _0x52 and _0x48~="全部"then
+				if _0x49 and _0x49~="默认"and _0x49~="无"then
+					_0x52:FireServer(_0x48,"Wrap",_0x49)
+				end
+				if _0x4a and _0x4a~="无"then
+					_0x52:FireServer(_0x48,"Charm",_0x4a)
+				end
+				if _0x4b and _0x4b~="无"then
+					_0x52:FireServer(_0x48,"Finisher",_0x4b)
+				end
+			end
+		end
+	end)
+end
+
+local _0x53=Instance.new("Frame")
+_0x53.Name="DropdownOverlay"
+_0x53.Size=UDim2.new(1,0,1,0)
+_0x53.BackgroundTransparency=1
+_0x53.ZIndex=1000
+_0x53.Parent=_0x29
+table.insert(_0x6,_0x53)
+
+local _0x54=nil
+UserInputService.InputBegan:Connect(function(_0x55)
+	if _0x55.UserInputType==Enum.UserInputType.MouseButton1 or _0x55.UserInputType==Enum.UserInputType.Touch then
+		if _0x54 then _0x54(_0x55.Position)end
+	end
+end)
+
+local _0x56=Instance.new("Frame")
+_0x56.Name="ParagonWatermark"
+_0x56.Size=UDim2.new(0,275,0,22)
+_0x56.Position=UDim2.new(1,-285,0,8)
+_0x56.BackgroundColor3=_0x13.CardBg
+_0x56.BorderSizePixel=0
+_0x56.ZIndex=90
+_0x56.Parent=_0x29
+table.insert(_0x6,_0x56)
+
+local _0x57=Instance.new("UIGradient")
+_0x57.Rotation=90
+_0x57.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,_0x13.CardBgTop),ColorSequenceKeypoint.new(1,_0x13.CardBgBottom)})
+_0x57.Parent=_0x56
+
+local _0x58=Instance.new("UIStroke")
+_0x58.Color=_0x13.BorderCard
+_0x58.Thickness=1
+_0x58.Parent=_0x56
+
+local _0x59=Instance.new("Frame")
+_0x59.Size=UDim2.new(1,0,0,1.5)
+_0x59.BackgroundColor3=_0x13.AccentPink
+_0x59.BorderSizePixel=0
+_0x59.ZIndex=91
+_0x59.Parent=_0x56
+
+local _0x5a=Instance.new("UIGradient")
+_0x5a.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,_0x13.AccentPinkLight),ColorSequenceKeypoint.new(1,_0x13.AccentPinkDark)})
+_0x5a.Parent=_0x59
+
+local _0x5b=Instance.new("TextLabel")
+_0x5b.Size=UDim2.new(1,-12,1,-2)
+_0x5b.Position=UDim2.new(0,8,0,2)
+_0x5b.BackgroundTransparency=1
+_0x5b.Font=_0x14
+_0x5b.RichText=true
+_0x5b.Text='<b>P</b>  |  <font color="#e27898">paragon.ripped</font>  |  60 帧  |  0 毫秒'
+_0x5b.TextColor3=_0x13.TextWhite
+_0x5b.TextSize=10.5
+_0x5b.TextXAlignment=Enum.TextXAlignment.Left
+_0x5b.ZIndex=92
+_0x5b.Parent=_0x56
+
+local _0x5c=Instance.new("Frame")
+_0x5c.Name="NotifContainer"
+_0x5c.Size=UDim2.new(0,260,1,-40)
+_0x5c.Position=UDim2.new(1,-275,0,36)
+_0x5c.BackgroundTransparency=1
+_0x5c.ZIndex=100
+_0x5c.Parent=_0x29
+table.insert(_0x6,_0x5c)
+
+local _0x5d=Instance.new("UIListLayout")
+_0x5d.SortOrder=Enum.SortOrder.LayoutOrder
+_0x5d.VerticalAlignment=Enum.VerticalAlignment.Bottom
+_0x5d.Padding=UDim.new(0,5)
+_0x5d.Parent=_0x5c
+
+local function _0x5e(_0x5f,_0x60,_0x61,_0x62)
+	if not _0x4 then return end
+	pcall(function()
+		if not _0x5c or not _0x5c.Parent then return end
+		_0x62=_0x62 or 3.5
+		_0x61=_0x61 or"信息"
+		local _0x63=_0x13.AccentGreen
+		if _0x61=="成功"then
+			_0x63=_0x13.AccentGreenLight
+		elseif _0x61=="警告"then
+			_0x63=_0x13.Yellow
+		elseif _0x61=="错误"then
+			_0x63=_0x13.Red
+		end
+		local _0x64=Instance.new("Frame")
+		_0x64.Size=UDim2.new(1,0,0,0)
+		_0x64.BackgroundColor3=_0x13.CardBg
+		_0x64.BorderSizePixel=0
+		_0x64.ClipsDescendants=true
+		_0x64.ZIndex=101
+		_0x64.Parent=_0x5c
+
+		local _0x65=Instance.new("UIStroke")
+		_0x65.Color=_0x13.BorderDark
+		_0x65.Thickness=1
+		_0x65.Parent=_0x64
+
+		local _0x66=Instance.new("Frame")
+		_0x66.Size=UDim2.new(1,0,0,1.5)
+		_0x66.BackgroundColor3=_0x63
+		_0x66.BorderSizePixel=0
+		_0x66.ZIndex=102
+		_0x66.Parent=_0x64
+
+		local _0x67=Instance.new("TextLabel")
+		_0x67.Size=UDim2.new(1,-14,0,15)
+		_0x67.Position=UDim2.new(0,8,0,3)
+		_0x67.BackgroundTransparency=1
+		_0x67.Font=_0x14
+		_0x67.Text=_0x5f
+		_0x67.TextColor3=_0x13.AccentGreen
+		_0x67.TextSize=11.5
+		_0x67.TextXAlignment=Enum.TextXAlignment.Left
+		_0x67.ZIndex=102
+		_0x67.Parent=_0x64
+
+		local _0x68=Instance.new("TextLabel")
+		_0x68.Size=UDim2.new(1,-14,0,22)
+		_0x68.Position=UDim2.new(0,8,0,18)
+		_0x68.BackgroundTransparency=1
+		_0x68.Font=_0x14
+		_0x68.Text=_0x60
+		_0x68.TextColor3=_0x13.TextWhite
+		_0x68.TextSize=10
+		_0x68.TextWrapped=true
+		_0x68.TextXAlignment=Enum.TextXAlignment.Left
+		_0x68.ZIndex=102
+		_0x68.Parent=_0x64
+
+		TweenService:Create(_0x64,TweenInfo.new(0.2,Enum.EasingStyle.Quart,Enum.EasingDirection.Out),{Size=UDim2.new(1,0,0,46)}):Play()
+		task.delay(_0x62,function()
+			if _0x64 and _0x64.Parent then
+				local _0x69=TweenService:Create(_0x64,TweenInfo.new(0.18,Enum.EasingStyle.Quart,Enum.EasingDirection.In),{Size=UDim2.new(1,0,0,0)})
+				_0x69:Play()
+				_0x69.Completed:Connect(function()_0x64:Destroy()end)
+			end
+		end)
+	end)
+end
+
+local _0x6a={
+	hudFrame=nil,
+	hudTitle=nil,
+	hudAvatar=nil,
+	hudName=nil,
+	hudHpFill=nil,
+	visualizerFolder=nil,
+	poolLines={},
+	poolChevrons={},
+	cachedWaypoints={},
+	autoplayWpIndex=1,
+	lastAutoplayStuckTime=0,
+	lastAutoplayPos=nil,
+	lastTargetUserId=nil,
+	activeRoot=nil,
+	activeChar=nil,
+	activeHum=nil,
+	activePlayer=nil,
+	cachedEnemies={},
+	lastEnemyUpdateTime=0,
+	targetCache={},
+	staticRayParams=nil,
+	lastFullbrightCheck=0,
+	lastNoFogCheck=0,
+	lastPathMyPos=nil,
+	lastPathActPos=nil
+}
+
+local function _0x6b()
+	local _0x6c=Instance.new("Frame")
+	_0x6c.Name="TargetHUD"
+	_0x6c.Size=UDim2.new(0,310,0,72)
+	_0x6c.Position=UDim2.new(0.5,-155,1,-125)
+	_0x6c.BackgroundColor3=Color3.fromRGB(15,18,15)
+	_0x6c.BorderSizePixel=0
+	_0x6c.Visible=false
+	_0x6c.ZIndex=80
+	_0x6c.Parent=_0x29
+	table.insert(_0x6,_0x6c)
+	_0x6a.hudFrame=_0x6c
+
+	local _0x6d=Instance.new("UIStroke")
+	_0x6d.Color=Color3.fromRGB(45,55,45)
+	_0x6d.Thickness=1.2
+	_0x6d.Parent=_0x6c
+
+	local _0x6e=Instance.new("Frame")
+	_0x6e.Size=UDim2.new(1,0,0,2.5)
+	_0x6e.BackgroundColor3=Color3.fromRGB(195,255,30)
+	_0x6e.BorderSizePixel=0
+	_0x6e.ZIndex=81
+	_0x6e.Parent=_0x6c
+
+	local _0x6f=Instance.new("TextLabel")
+	_0x6f.Size=UDim2.new(1,-20,0,18)
+	_0x6f.Position=UDim2.new(0,10,0,4)
+	_0x6f.BackgroundTransparency=1
+	_0x6f.Font=_0x14
+	_0x6f.Text="目标  -  150/150"
+	_0x6f.TextColor3=_0x13.TextWhite
+	_0x6f.TextSize=14
+	_0x6f.TextXAlignment=Enum.TextXAlignment.Left
+	_0x6f.ZIndex=82
+	_0x6f.Parent=_0x6c
+	_0x6a.hudTitle=_0x6f
+
+	local _0x70=Instance.new("ImageLabel")
+	_0x70.Size=UDim2.new(0,42,0,42)
+	_0x70.Position=UDim2.new(0,10,0,24)
+	_0x70.BackgroundColor3=Color3.fromRGB(20,24,20)
+	_0x70.BorderSizePixel=0
+	_0x70.ZIndex=82
+	_0x70.Parent=_0x6c
+	_0x6a.hudAvatar=_0x70
+
+	local _0x71=Instance.new("UIStroke")
+	_0x71.Color=Color3.fromRGB(195,255,30)
+	_0x71.Thickness=1.2
+	_0x71.Parent=_0x70
+
+	local _0x72=Instance.new("TextLabel")
+	_0x72.Size=UDim2.new(1,-68,0,18)
+	_0x72.Position=UDim2.new(0,60,0,24)
+	_0x72.BackgroundTransparency=1
+	_0x72.Font=_0x14
+	_0x72.Text="玩家 (@用户名)"
+	_0x72.TextColor3=_0x13.TextWhite
+	_0x72.TextSize=13
+	_0x72.TextXAlignment=Enum.TextXAlignment.Left
+	_0x72.TextTruncate=Enum.TextTruncate.AtEnd
+	_0x72.ZIndex=82
+	_0x72.Parent=_0x6c
+	_0x6a.hudName=_0x72
+
+	local _0x73=Instance.new("Frame")
+	_0x73.Size=UDim2.new(1,-68,0,8)
+	_0x73.Position=UDim2.new(0,60,0,48)
+	_0x73.BackgroundColor3=Color3.fromRGB(28,34,28)
+	_0x73.BorderSizePixel=0
+	_0x73.ZIndex=82
+	_0x73.Parent=_0x6c
+
+	local _0x74=Instance.new("UICorner")
+	_0x74.CornerRadius=UDim.new(0,2)
+	_0x74.Parent=_0x73
+
+	local _0x75=Instance.new("Frame")
+	_0x75.Size=UDim2.new(1,0,1,0)
+	_0x75.BackgroundColor3=Color3.fromRGB(195,255,30)
+	_0x75.BorderSizePixel=0
+	_0x75.ZIndex=83
+	_0x75.Parent=_0x73
+	_0x6a.hudHpFill=_0x75
+
+	local _0x76=Instance.new("UICorner")
+	_0x76.CornerRadius=UDim.new(0,2)
+	_0x76.Parent=_0x75
+
+	local _0x77=Instance.new("Folder")
+	_0x77.Name="ParagonTargetVisualizer"
+	_0x77.Parent=workspace
+	table.insert(_0x6,_0x77)
+	_0x6a.visualizerFolder=_0x77
+
+	for _0x78=1,40 do
+		local _0x79=Instance.new("Part")
+		_0x79.Name="VisLine_".._0x78
+		_0x79.Anchored=true
+		_0x79.CanCollide=false
+		_0x79.CanTouch=false
+		_0x79.CanQuery=false
+		_0x79.CastShadow=false
+		_0x79.Material=Enum.Material.Neon
+		_0x79.Color=Color3.fromRGB(195,255,30)
+		_0x79.Transparency=1
+		_0x79.Size=Vector3.new(0.18,0.06,1)
+		_0x79.Parent=_0x77
+		table.insert(_0x6a.poolLines,_0x79)
+	end
+
+	for _0x7a=1,30 do
+		local _0x7b=Instance.new("Part")
+		_0x7b.Name="ChevL_".._0x7a
+		_0x7b.Anchored=true
+		_0x7b.CanCollide=false
+		_0x7b.CanTouch=false
+		_0x7b.CanQuery=false
+		_0x7b.CastShadow=false
+		_0x7b.Material=Enum.Material.Neon
+		_0x7b.Color=Color3.fromRGB(195,255,30)
+		_0x7b.Transparency=1
+		_0x7b.Size=Vector3.new(0.22,0.08,1.2)
+		_0x7b.Parent=_0x77
+		local _0x7c=Instance.new("Part")
+		_0x7c.Name="ChevR_".._0x7a
+		_0x7c.Anchored=true
+		_0x7c.CanCollide=false
+		_0x7c.CanTouch=false
+		_0x7c.CanQuery=false
+		_0x7c.CastShadow=false
+		_0x7c.Material=Enum.Material.Neon
+		_0x7c.Color=Color3.fromRGB(195,255,30)
+		_0x7c.Transparency=1
+		_0x7c.Size=Vector3.new(0.22,0.08,1.2)
+		_0x7c.Parent=_0x77
+		table.insert(_0x6a.poolChevrons,{Left=_0x7b,Right=_0x7c})
+	end
+end
+_0x6b()
+
+local _0x7d=Instance.new("Frame")
+_0x7d.Name="MainWindow"
+_0x7d.Size=UDim2.new(0,480,0,500)
+_0x7d.Position=UDim2.new(0.5,-240,0.5,-250)
+_0x7d.BackgroundColor3=_0x13.WindowBg
+_0x7d.BorderSizePixel=0
+_0x7d.ClipsDescendants=false
+_0x7d.Active=true
+_0x7d.ZIndex=10
+_0x7d.Parent=_0x29
+table.insert(_0x6,_0x7d)
+
+local _0x7e=nil
+local _0x7f=nil
+local _0x80={enabled=false,rotX=0,rotY=0,pos=Vector3.zero}
+local _0x81=nil
+local _0x82=0
+local _0x83=0
+local _0x84=0
+local _0x85=false
+
+local function _0x86()
+	local _0x87=_0x2.LocalPlayer.Character
+	if not _0x87 then return false end
+	for _,_0x88 in ipairs(_0x87:GetChildren())do
+		if _0x88:IsA("Tool")then return true end
+	end
+	local _0x89=workspace:FindFirstChild("ViewModels")
+	local _0x8a=_0x89 and _0x89:FindFirstChild("FirstPerson")
+	if _0x8a and #_0x8a:GetChildren()>0 then
+		for _,_0x8b in ipairs(_0x8a:GetChildren())do
+			if _0x8b:IsA("Model")or _0x8b:IsA("BasePart")then return true end
+		end
+	end
+	return false
+end
+
+local function _0x8c(_0x8d)
+	pcall(function()
+		local _0x8e=_0x2.LocalPlayer:FindFirstChild("PlayerScripts")
+		local _0x8f=_0x8e and _0x8e:FindFirstChild("PlayerModule")
+		if _0x8f then
+			local _0x90=require(_0x8f):GetControls()
+			if _0x90 then
+				if _0x8d then
+					_0x90:Enable()
+				else
+					_0x90:Disable()
+				end
+			end
+		end
+	end)
+end
+
+local function _0x91(_0x92)
+	_0x7d.Visible=_0x92
+	if _0x92 then
+		_0x7e=_0x3.CFrame
+		_0x7f=_0x3.FieldOfView
+		UserInputService.MouseBehavior=Enum.MouseBehavior.Default
+		UserInputService.MouseIconEnabled=true
+		_0x8c(false)
+		local _0x93=_0x2.LocalPlayer.Character
+		local _0x94=_0x93 and _0x93:FindFirstChild("HumanoidRootPart")
+		if _0x94 then
+			_0x94.AssemblyLinearVelocity=Vector3.new(0,math.min(_0x94.AssemblyLinearVelocity.Y,0),0)
+		end
+		pcall(function()
+			ContextActionService:BindActionAtPriority("ParagonMenuFreeze",function()
+				return Enum.ContextActionResult.Sink
+			end,false,Enum.ContextActionPriority.High.Value+5000,
+			Enum.UserInputType.MouseMovement,
+			Enum.UserInputType.Touch,
+			Enum.KeyCode.W,Enum.KeyCode.A,Enum.KeyCode.S,Enum.KeyCode.D,
+			Enum.KeyCode.Space,Enum.KeyCode.LeftShift,Enum.KeyCode.LeftControl,
+			Enum.KeyCode.Up,Enum.KeyCode.Down,Enum.KeyCode.Left,Enum.KeyCode.Right)
+		end)
+	else
+		_0x7e=nil
+		_0x7f=nil
+		_0x8c(true)
+		pcall(function()ContextActionService:UnbindAction("ParagonMenuFreeze")end)
+	end
+end
+
+local _0x95=Instance.new("UIStroke")
+_0x95.Color=_0x13.OuterBorder
+_0x95.Thickness=1
+_0x95.Parent=_0x7d
+
+local _0x96=Instance.new("UIGradient")
+_0x96.Rotation=90
+_0x96.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,_0x13.WindowBgTop),ColorSequenceKeypoint.new(1,_0x13.WindowBgBottom)})
+_0x96.Parent=_0x7d
+
+local _0x97=Instance.new("Frame")
+_0x97.Name="TopBar"
+_0x97.Size=UDim2.new(1,0,0,32)
+_0x97.BackgroundColor3=_0x13.HeaderBg
+_0x97.BorderSizePixel=0
+_0x97.ZIndex=11
+_0x97.Parent=_0x7d
+
+local _0x98=false
+local _0x99,_0x9a
+
+_0x97.InputBegan:Connect(function(_0x9b)
+	if _0x9b.UserInputType==Enum.UserInputType.MouseButton1 or _0x9b.UserInputType==Enum.UserInputType.Touch then
+		_0x98=true
+		_0x99=_0x9b.Position
+		_0x9a=_0x7d.Position
+		_0x9b.Changed:Connect(function()
+			if _0x9b.UserInputState==Enum.UserInputState.End then
+				_0x98=false
+			end
+		end)
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(_0x9b)
+	if _0x98 and(_0x9b.UserInputType==Enum.UserInputType.MouseMovement or _0x9b.UserInputType==Enum.UserInputType.Touch)then
+		local _0x9c=_0x9b.Position-_0x99
+		_0x7d.Position=UDim2.new(_0x9a.X.Scale,_0x9a.X.Offset+_0x9c
